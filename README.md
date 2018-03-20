@@ -1,0 +1,1 @@
+The project to try how an ordinary web-based system can be built in the Go.
