@@ -3,5 +3,5 @@ package main
 type User struct {
 	FirstName string
 	LastName string
-	UserName string
+	Username string
 }
