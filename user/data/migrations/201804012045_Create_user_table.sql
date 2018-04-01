@@ -1,0 +1,7 @@
+USE users;
+
+CREATE TABLE user (
+	id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL);
