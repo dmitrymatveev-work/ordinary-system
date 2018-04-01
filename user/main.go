@@ -28,42 +28,50 @@ func main() {
 }
 
 func getAll(w http.ResponseWriter, r *http.Request) {
-	initOKResponse(w)
+	initResponse(w)
 	
 	users, err := data.GetUsers()
 
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(err)
 		return
 	}
 	
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(users)
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	initOKResponse(w)
+	initResponse(w)
 
-	user := getUserFromBody(r.Body)
-
-	user, err := data.CreateUser(user)
+	user, err := getUserFromBody(r.Body)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(err)
 		return
 	}
 
+	user, err = data.CreateUser(user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
 }
 
-func initOKResponse (w http.ResponseWriter) {
+func initResponse (w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 }
 
-func getUserFromBody(body io.Reader) model.User {
+func getUserFromBody(body io.Reader) (model.User, error) {
 	rawBody, _ := ioutil.ReadAll(body)
 	var u model.User
 	if err := json.Unmarshal(rawBody, &u); err != nil {
-		panic(err)
+		return model.User{}, err
 	}
-	return u
+	return u, nil
 }
