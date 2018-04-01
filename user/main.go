@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"ordinary-system/user/model"
+	"ordinary-system/user/data"
 )
 
 func main() {
@@ -30,16 +30,13 @@ func main() {
 func getAll(w http.ResponseWriter, r *http.Request) {
 	initOKResponse(w)
 	
-	session, err := mgo.Dial("localhost")
+	users, err := data.GetUsers()
+
 	if err != nil {
-		panic(err)
+		json.NewEncoder(w).Encode(err)
+		return
 	}
-	defer session.Close()
-
-	c := session.DB("users").C("users")
-	var users []User
-	err = c.Find(bson.M{}).All(&users)
-
+	
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -48,17 +45,13 @@ func create(w http.ResponseWriter, r *http.Request) {
 
 	user := getUserFromBody(r.Body)
 
-	session, err := mgo.Dial("localhost")
+	user, err := data.CreateUser(user)
 	if err != nil {
-		panic(err)
+		json.NewEncoder(w).Encode(err)
+		return
 	}
-	defer session.Close()
 
-	c := session.DB("users").C("users")
-	err = c.Insert(&user)
-	if err != nil {
-		log.Fatal(err)
-	}
+	json.NewEncoder(w).Encode(user)
 }
 
 func initOKResponse (w http.ResponseWriter) {
@@ -66,11 +59,11 @@ func initOKResponse (w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getUserFromBody(body io.Reader) User {
+func getUserFromBody(body io.Reader) model.User {
 	rawBody, _ := ioutil.ReadAll(body)
-	var user User
-	if err := json.Unmarshal(rawBody, &user); err != nil {
+	var u model.User
+	if err := json.Unmarshal(rawBody, &u); err != nil {
 		panic(err)
 	}
-	return user
+	return u
 }
