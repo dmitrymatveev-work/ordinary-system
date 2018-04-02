@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"ordinary-system/blog/data"
 	"ordinary-system/blog/model"
+	"ordinary-system/utility"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -30,59 +31,44 @@ func main() {
 }
 
 func getAll(w http.ResponseWriter, r *http.Request) {
-	initResponse(w)
-
 	vars := mux.Vars(r)
 	userID, err := strconv.ParseInt(vars["userID"], 10, 64)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteBadRequest(w, err)
 		return
 	}
 
 	articles, err := data.GetArticles(userID)
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteInternalError(w, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(articles)
+	utility.WriteResponse(w, articles)
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	initResponse(w)
-
 	vars := mux.Vars(r)
 	userID, err := strconv.ParseInt(vars["userID"], 10, 64)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteBadRequest(w, err)
 		return
 	}
 
 	article, err := getArticleFromBody(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteBadRequest(w, err)
 		return
 	}
 
 	article, err = data.CreateArticle(userID, article)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteInternalError(w, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(article)
-}
-
-func initResponse(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
+	utility.WriteResponse(w, article)
 }
 
 func getArticleFromBody(body io.Reader) (model.Article, error) {

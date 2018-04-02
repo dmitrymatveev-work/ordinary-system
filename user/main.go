@@ -1,14 +1,16 @@
 package main
 
 import (
-	"io/ioutil"
-	"io"
-	"log"
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
-	"github.com/gorilla/mux"
-	"ordinary-system/user/model"
 	"ordinary-system/user/data"
+	"ordinary-system/user/model"
+	"ordinary-system/utility"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -28,43 +30,30 @@ func main() {
 }
 
 func getAll(w http.ResponseWriter, r *http.Request) {
-	initResponse(w)
-	
 	users, err := data.GetUsers()
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteInternalError(w, err)
 		return
 	}
-	
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(users)
+
+	utility.WriteResponse(w, users)
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	initResponse(w)
-
 	user, err := getUserFromBody(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteBadRequest(w, err)
 		return
 	}
 
 	user, err = data.CreateUser(user)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
+		utility.WriteInternalError(w, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
-}
-
-func initResponse (w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
+	utility.WriteResponse(w, user)
 }
 
 func getUserFromBody(body io.Reader) (model.User, error) {

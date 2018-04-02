@@ -7,6 +7,6 @@ import (
 // Article is a blog article
 type Article struct {
 	ID      bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Title   string
-	Content string
+	Title   string        `json:"title"`
+	Content string        `json:"content"`
 }
