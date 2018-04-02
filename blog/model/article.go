@@ -1,8 +1,12 @@
 package model
 
+import (
+	"gopkg.in/mgo.v2/bson"
+)
+
 // Article is a blog article
 type Article struct {
-	ID      int64
+	ID      bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Title   string
 	Content string
 }

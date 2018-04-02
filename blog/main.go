@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"ordinary-system/blog/data"
 	"ordinary-system/blog/model"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -15,12 +18,12 @@ func main() {
 
 	router.
 		Methods("GET").
-		Path("/api/blogs").
+		Path("/api/users/{userID}/articles").
 		HandlerFunc(getAll)
 
 	router.
 		Methods("POST").
-		Path("/api/blogs").
+		Path("/api/users/{userID}/articles").
 		HandlerFunc(create)
 
 	log.Fatal(http.ListenAndServe(":8081", router))
@@ -29,9 +32,15 @@ func main() {
 func getAll(w http.ResponseWriter, r *http.Request) {
 	initResponse(w)
 
-	// TODO: obtain user ID
+	vars := mux.Vars(r)
+	userID, err := strconv.ParseInt(vars["userID"], 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
 
-	articles, err := data.GetArticles(0)
+	articles, err := data.GetArticles(userID)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -46,9 +55,22 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 func create(w http.ResponseWriter, r *http.Request) {
 	initResponse(w)
 
-	// TODO: obtain user ID and an article
+	vars := mux.Vars(r)
+	userID, err := strconv.ParseInt(vars["userID"], 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
 
-	article, err := data.CreateArticle(0, model.Article{})
+	article, err := getArticleFromBody(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+
+	article, err = data.CreateArticle(userID, article)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(err)
@@ -61,4 +83,13 @@ func create(w http.ResponseWriter, r *http.Request) {
 
 func initResponse(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
+}
+
+func getArticleFromBody(body io.Reader) (model.Article, error) {
+	rawBody, _ := ioutil.ReadAll(body)
+	var a model.Article
+	if err := json.Unmarshal(rawBody, &a); err != nil {
+		return model.Article{}, err
+	}
+	return a, nil
 }
