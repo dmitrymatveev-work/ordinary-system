@@ -3,12 +3,13 @@ package data
 import (
 	"database/sql"
 	"ordinary-system/user/model"
-
+	// MySQL driver
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var dsn string = "root:123!@#qweQWE@/users"
+var dsn = "root:123!@#qweQWE@/users"
 
+// CreateUser function stores user into a storage
 func CreateUser(u model.User) (model.User, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -26,13 +27,14 @@ func CreateUser(u model.User) (model.User, error) {
 	if err != nil {
 		return model.User{}, err
 	}
-	u.Id, err = res.LastInsertId()
+	u.ID, err = res.LastInsertId()
 	if err != nil {
 		return model.User{}, err
 	}
 	return u, nil
 }
 
+// GetUsers function retrieves users from a storage
 func GetUsers() ([]model.User, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -50,7 +52,7 @@ func GetUsers() ([]model.User, error) {
 
 	for rows.Next() {
 		u := model.User{}
-		err := rows.Scan(&u.Id, &u.FirstName, &u.LastName, &u.Username)
+		err := rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username)
 		if err != nil {
 			return nil, err
 		}
