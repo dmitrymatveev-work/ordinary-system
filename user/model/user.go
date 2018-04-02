@@ -1,8 +1,9 @@
 package model
 
+// User holds user data
 type User struct {
-	Id int64
+	ID        int64
 	FirstName string
-	LastName string
-	Username string
+	LastName  string
+	Username  string
 }
